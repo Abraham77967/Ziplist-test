@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+    <title>ZipList - Smart Travel Packing Assistant</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+    <!-- Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "primary-container": "#2c687b",
+                "on-secondary": "#ffffff",
+                "secondary-fixed-dim": "#96d1ce",
+                "on-background": "#1e1b1b",
+                "on-primary-fixed": "#001f28",
+                "inverse-surface": "#342f30",
+                "tertiary-fixed": "#ffdad5",
+                "error": "#ba1a1a",
+                "error-container": "#ffdad6",
+                "surface-container-high": "#efe6e6",
+                "on-primary": "#ffffff",
+                "on-tertiary-fixed-variant": "#930007",
+                "on-secondary-fixed": "#00201f",
+                "on-error": "#ffffff",
+                "background": "#fff8f7",
+                "inverse-primary": "#96cfe5",
+                "outline": "#70787c",
+                "surface-tint": "#296678",
+                "primary": "#085062",
+                "secondary-fixed": "#b2eeea",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed-dim": "#ffb4aa",
+                "surface-dim": "#e0d8d8",
+                "secondary-container": "#afebe7",
+                "on-primary-container": "#abe5fb",
+                "primary-fixed": "#b6ebff",
+                "tertiary": "#980007",
+                "on-primary-fixed-variant": "#034e60",
+                "secondary": "#2b6765",
+                "surface-container": "#f5ecec",
+                "on-tertiary-fixed": "#410001",
+                "inverse-on-surface": "#f8efef",
+                "surface-container-highest": "#e9e0e1",
+                "surface-container-lowest": "#ffffff",
+                "surface": "#fff8f7",
+                "tertiary-container": "#c5000d",
+                "on-error-container": "#93000a",
+                "surface-container-low": "#faf2f2",
+                "surface-bright": "#fff8f7",
+                "on-secondary-fixed-variant": "#0a4f4d",
+                "outline-variant": "#c0c8cc",
+                "surface-variant": "#e9e0e1",
+                "on-surface": "#1e1b1b",
+                "on-surface-variant": "#40484b",
+                "primary-fixed-dim": "#96cfe5",
+                "on-tertiary-container": "#ffd2cc",
+                "on-secondary-container": "#306c6a"
+            },
+            "borderRadius": {
+                "DEFAULT": "1rem",
+                "lg": "2rem",
+                "xl": "3rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "container-max": "1280px",
+                "gutter": "24px",
+                "base": "8px",
+                "margin-desktop": "64px",
+                "margin-mobile": "20px",
+                "edge-margin": "20px",
+                "xs": "4px",
+                "md": "20px",
+                "lg": "32px",
+                "sm": "12px",
+                "xl": "48px"
+            },
+            "fontFamily": {
+                "label-md": ["Plus Jakarta Sans"],
+                "body-md": ["Plus Jakarta Sans"],
+                "label-sm": ["Plus Jakarta Sans"],
+                "headline-lg-mobile": ["Plus Jakarta Sans"],
+                "headline-lg": ["Plus Jakarta Sans"],
+                "headline-md": ["Plus Jakarta Sans"],
+                "body-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "600"}],
+                "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                "headline-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "headline-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                "headline-md": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body class="bg-background font-body-md text-on-background min-h-screen pb-28 select-none overflow-x-hidden">
+
+    <!-- Sticky Shared Header -->
+    <header class="bg-surface sticky top-0 w-full z-40 border-b border-outline-variant flex items-center justify-between px-edge-margin h-14 shadow-sm">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[28px]">luggage</span>
+            <h1 class="font-headline-md text-headline-md font-bold text-primary" id="header-title">ZipList</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Share/Export Button -->
+            <button onclick="openShareModal()" class="material-symbols-outlined text-outline hover:text-primary transition-colors p-1" title="Share and Export list">share</button>
+            <!-- Reset Button to clear localStorage and revert to defaults -->
+            <button onclick="resetApp()" class="material-symbols-outlined text-outline hover:text-error transition-colors p-1" title="Reset to default demo list">restart_alt</button>
+            <!-- Clear Button to start fresh -->
+            <button onclick="clearAllItems()" class="material-symbols-outlined text-outline hover:text-error transition-colors p-1" title="Clear all and start fresh">delete_sweep</button>
+            <span class="material-symbols-outlined text-primary hover:opacity-80 transition-opacity cursor-pointer">account_circle</span>
+        </div>
+    </header>
+
+    <!-- VIEWS CONTAINER -->
+    <main class="mt-4">
+
+        <!-- 1. VIEW: INVENTORY -->
+        <section id="view-inventory" class="view-section px-edge-margin flex flex-col gap-6">
+            <div class="flex flex-col gap-1">
+                <h2 class="font-headline-lg-mobile text-on-surface">Inventory</h2>
+                <p class="text-on-surface-variant font-body-md">Quickly list everything you think you might need. Don't worry about bags yet.</p>
+            </div>
+
+            <!-- Main Items List -->
+            <div class="flex flex-col gap-sm" id="item-list">
+                <!-- Dynamically Rendered items -->
+            </div>
+
+            <!-- Bottom sticky spacer to avoid layout overlap -->
+            <div class="h-44"></div>
+
+            <!-- Fixed Input & Suggestions Area at the Bottom of Brain Dump -->
+            <div class="fixed bottom-14 left-0 w-full z-30 bg-background/95 backdrop-blur-md border-t border-outline-variant/50 pt-2 pb-4 px-edge-margin shadow-[0_-8px_20px_rgba(44,104,123,0.06)]">
+                <!-- Suggestions Carousel -->
+                <div class="mb-3">
+                    <p class="text-[11px] uppercase tracking-wider font-bold text-outline mb-1.5 px-1">Quick Suggestions</p>
+                    <div class="flex overflow-x-auto no-scrollbar gap-sm pb-1" id="suggestions-container">
+                        <!-- suggestions dynamically loaded -->
+                    </div>
+                </div>
+
+                <!-- Input bar -->
+                <div class="flex flex-col gap-3">
+                    <div class="flex items-center gap-sm">
+                        <div class="flex-1 bg-surface-container-low rounded-full h-12 flex items-center px-4 border border-outline-variant focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+                            <input class="bg-transparent border-none focus:ring-0 w-full text-on-surface font-body-md placeholder:text-outline" id="add-input" placeholder="Add an item... (e.g. Jacket)" type="text" autocomplete="off"/>
+                            <button class="material-symbols-outlined text-primary flex items-center justify-center p-1 hover:opacity-85" onclick="addManualItem()">add_circle</button>
+                        </div>
+                    </div>
+                    
+                    <button onclick="switchView('organize')" class="w-full bg-primary text-on-primary h-12 rounded-full font-label-md text-label-md flex items-center justify-center gap-sm active-tap shadow-lg hover:bg-primary/95 transition-all">
+                        Next: Organize Bags
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. VIEW: ORGANIZE -->
+        <section id="view-organize" class="view-section hidden px-edge-margin flex flex-col gap-4">
+            <div class="flex flex-col gap-1">
+                <h2 class="font-headline-lg-mobile text-on-surface">Organize</h2>
+                <p class="text-on-surface-variant font-body-md">Swipe or tap to direct items to travel containers</p>
+            </div>
+
+            <!-- Category View Tabs (Show counts in each bag) -->
+            <div>
+                <div class="flex bg-surface-container rounded-full p-1 gap-1 border border-outline-variant/30">
+                    <button onclick="switchView('review')" class="flex-1 py-1.5 rounded-full text-label-sm font-label-md text-on-surface-variant hover:bg-surface-variant/50 transition-colors flex flex-col items-center">
+                        <span class="font-bold" id="tab-count-carryon">0</span>
+                        <span class="text-[10px] uppercase">Carry-On</span>
+                    </button>
+                    <button onclick="switchView('review')" class="flex-1 py-1.5 rounded-full text-label-sm font-label-md text-on-surface-variant hover:bg-surface-variant/50 transition-colors flex flex-col items-center">
+                        <span class="font-bold" id="tab-count-checked">0</span>
+                        <span class="text-[10px] uppercase">Checked</span>
+                    </button>
+                    <button onclick="switchView('review')" class="flex-1 py-1.5 rounded-full text-label-sm font-label-md text-on-surface-variant hover:bg-surface-variant/50 transition-colors flex flex-col items-center">
+                        <span class="font-bold" id="tab-count-personal">0</span>
+                        <span class="text-[10px] uppercase">Personal</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Canvas: Sorting Card Stack -->
+            <div class="flex-1 flex flex-col items-center justify-center relative py-6 overflow-visible min-h-[460px]">
+                
+                <!-- Sorting Hints -->
+                <div class="absolute inset-x-0 top-0 px-2 flex justify-between items-center opacity-30 pointer-events-none select-none">
+                    <div class="flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                        <span class="text-[11px] font-bold uppercase tracking-wider">Swipe Left: Checked</span>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[11px] font-bold uppercase tracking-wider">Swipe Right: Carry-On</span>
+                        <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+                    </div>
+                </div>
+
+                <!-- Deck Container -->
+                <div class="relative w-full max-w-xs h-[380px] flex items-center justify-center" id="card-deck-container">
+                    <!-- Bottom Placeholder Decor -->
+                    <div class="absolute w-full h-[360px] bg-surface-container-lowest rounded-lg border-2 border-dashed border-outline-variant/30 opacity-40 flex flex-col items-center justify-center text-center p-6">
+                        <span class="material-symbols-outlined text-outline/60 text-4xl mb-2">done_all</span>
+                        <p class="font-semibold text-on-surface-variant">All Sorted!</p>
+                        <p class="text-sm text-outline mt-1 mb-4">You have categorized all your items.</p>
+                        <button onclick="switchView('review')" class="bg-primary text-on-primary px-5 py-2 rounded-full font-label-md text-label-md shadow-md active-tap">
+                            Open Review Checklist
+                        </button>
+                    </div>
+                    
+                    <!-- Decoy Cards to form a visual stack (Updated by JS) -->
+                    <div class="absolute w-full h-[360px] bg-surface-container-lowest rounded-lg shadow-sm border border-outline-variant card-stack-2" id="decoy-stack-2"></div>
+                    <div class="absolute w-full h-[360px] bg-surface-container-lowest rounded-lg shadow-md border border-outline-variant card-stack-1" id="decoy-stack-1"></div>
+                    
+                    <!-- Swipe Card (Targeted by touch/mouse handler) -->
+                    <div class="swipe-card absolute w-full h-[360px] bg-surface-container-lowest rounded-lg shadow-xl border border-outline-variant p-6 flex flex-col items-center justify-between z-20 cursor-grab active:cursor-grabbing" id="active-card">
+                        <!-- Top details -->
+                        <div class="w-full flex justify-between items-center">
+                            <span class="text-xs uppercase tracking-wider font-semibold text-outline" id="card-category">Electronics</span>
+                            <span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full font-bold text-label-sm" id="card-qty">1 Unit</span>
+                        </div>
+                        
+                        <!-- Middle Graphic & Name -->
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="w-28 h-28 bg-secondary-container rounded-full flex items-center justify-center animate-float" id="card-icon-container">
+                                <span class="material-symbols-outlined text-secondary text-[56px]" id="card-icon">battery_charging_full</span>
+                            </div>
+                            <div class="text-center px-2">
+                                <h3 class="font-headline-md text-on-surface leading-tight" id="card-name">External Battery Pack</h3>
+                            </div>
+                        </div>
+
+                        <!-- Swipe instructions -->
+                        <div class="w-full flex items-center justify-between text-outline/40 pt-4 border-t border-outline-variant/20">
+                            <span class="material-symbols-outlined">keyboard_double_arrow_left</span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest">Swipe Left/Right or Tap Below</span>
+                            <span class="material-symbols-outlined">keyboard_double_arrow_right</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Liquid/TSA/Battery Alert popups inside Sorting Desk -->
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] bg-tertiary-container text-on-tertiary-container rounded-lg p-5 flex items-start gap-4 liquid-alert-shadow border border-tertiary/20 hidden" id="tsa-alert">
+                    <div class="bg-on-tertiary-container/10 p-2 rounded-full flex items-center justify-center mt-1">
+                        <span class="material-symbols-outlined text-on-tertiary-container" id="tsa-alert-icon">battery_alert</span>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-bold text-label-md text-label-md" id="tsa-alert-title">BATTERY ALERT</p>
+                        <p class="font-body-md mt-1 leading-tight text-sm" id="tsa-alert-message">Spare lithium batteries must be in carry-on baggage, not checked.</p>
+                    </div>
+                    <button class="material-symbols-outlined hover:opacity-75 transition-opacity" onclick="hideTsaAlert()">close</button>
+                </div>
+            </div>
+
+            <!-- Contextual Bag Buttons: Drop Target fallbacks -->
+            <div class="flex flex-col gap-2 mt-2">
+                <p class="text-[11px] uppercase tracking-wider font-bold text-center text-outline">Quick Bag Selector</p>
+                <div class="grid grid-cols-3 gap-3">
+                    <button onclick="sortActiveCard('checked')" class="bg-surface-container border border-outline-variant/40 hover:bg-surface-container-high text-on-surface py-3 px-2 rounded-lg flex flex-col items-center gap-1 active-tap transition-all">
+                        <span class="material-symbols-outlined text-outline">inventory_2</span>
+                        <span class="text-xs font-semibold">Checked Bag</span>
+                        <span class="text-[9px] uppercase opacity-60">Swipe Left</span>
+                    </button>
+                    <button onclick="sortActiveCard('personal')" class="bg-secondary-container/30 border border-secondary-container text-on-secondary-container py-3 px-2 rounded-lg flex flex-col items-center gap-1 active-tap transition-all">
+                        <span class="material-symbols-outlined text-secondary">backpack</span>
+                        <span class="text-xs font-semibold">Personal Item</span>
+                        <span class="text-[9px] uppercase opacity-60">Swipe Up</span>
+                    </button>
+                    <button onclick="sortActiveCard('carry-on')" class="bg-primary-container/20 border border-primary-container/40 hover:bg-primary-container/30 text-primary py-3 px-2 rounded-lg flex flex-col items-center gap-1 active-tap transition-all">
+                        <span class="material-symbols-outlined text-primary">luggage</span>
+                        <span class="text-xs font-semibold">Carry-On</span>
+                        <span class="text-[9px] uppercase opacity-60">Swipe Right</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. VIEW: REVIEW -->
+        <section id="view-review" class="view-section hidden px-edge-margin flex flex-col gap-6">
+            <div class="flex flex-col gap-1">
+                <h2 class="font-headline-lg-mobile text-on-surface">Review</h2>
+                <p class="text-on-surface-variant font-body-md">Verify items as you place them into your containers.</p>
+            </div>
+
+            <!-- Top Circular Progress Ring Section -->
+            <section class="grid grid-cols-3 gap-3 bg-surface-container-lowest p-4 rounded-lg custom-shadow border border-outline-variant/20">
+                <!-- Carry-On -->
+                <div class="flex flex-col items-center">
+                    <div class="relative flex items-center justify-center">
+                        <svg class="w-16 h-16">
+                            <circle class="text-surface-container" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="5"></circle>
+                            <circle class="progress-ring-circle text-primary" id="progress-carryon" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="175.9" stroke-dashoffset="175.9" stroke-linecap="round" stroke-width="5"></circle>
+                        </svg>
+                        <span class="absolute font-bold text-xs text-on-surface" id="percent-carryon">0%</span>
+                    </div>
+                    <p class="font-semibold text-xs mt-1 text-center">Carry-On</p>
+                </div>
+                <!-- Checked -->
+                <div class="flex flex-col items-center">
+                    <div class="relative flex items-center justify-center">
+                        <svg class="w-16 h-16">
+                            <circle class="text-surface-container" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="5"></circle>
+                            <circle class="progress-ring-circle text-secondary" id="progress-checked" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="175.9" stroke-dashoffset="175.9" stroke-linecap="round" stroke-width="5"></circle>
+                        </svg>
+                        <span class="absolute font-bold text-xs text-on-surface" id="percent-checked">0%</span>
+                    </div>
+                    <p class="font-semibold text-xs mt-1 text-center">Checked</p>
+                </div>
+                <!-- Personal -->
+                <div class="flex flex-col items-center">
+                    <div class="relative flex items-center justify-center">
+                        <svg class="w-16 h-16">
+                            <circle class="text-surface-container" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-width="5"></circle>
+                            <circle class="progress-ring-circle text-primary-container" id="progress-personal" cx="32" cy="32" fill="transparent" r="28" stroke="currentColor" stroke-dasharray="175.9" stroke-dashoffset="175.9" stroke-linecap="round" stroke-width="5"></circle>
+                        </svg>
+                        <span class="absolute font-bold text-xs text-on-surface" id="percent-personal">0%</span>
+                    </div>
+                    <p class="font-semibold text-xs mt-1 text-center">Personal</p>
+                </div>
+            </section>
+
+            <!-- Categorized Checklist Layout -->
+            <div class="flex flex-col gap-6" id="runway-checklists">
+                <!-- Checklists for Carry-On, Checked, Personal bags will render here -->
+            </div>
+
+            <!-- Packed Items Collapsed Section -->
+            <section class="mb-8">
+                <button class="w-full bg-surface-container p-4 rounded-lg flex items-center justify-between touch-target active:opacity-80 transition-opacity" onclick="toggleCollapse('packed-list', 'packed-arrow')">
+                    <div class="flex items-center gap-base">
+                        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+                        <span class="font-label-md" id="packed-items-header">Packed Items (0)</span>
+                    </div>
+                    <span class="material-symbols-outlined transition-transform" id="packed-arrow">expand_more</span>
+                </button>
+                <div class="hidden flex flex-col gap-xs mt-2 overflow-hidden" id="packed-list">
+                    <!-- Checked items list rendering -->
+                </div>
+            </section>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar (Shared Component) -->
+    <nav class="fixed bottom-0 left-0 w-full z-40 flex justify-around items-center px-4 py-2.5 bg-surface-container-lowest border-t border-outline-variant/60 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        <button id="nav-inventory" onclick="switchView('inventory')" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all rounded-xl px-4 py-1.5 active-tap">
+            <span class="material-symbols-outlined">edit_note</span>
+            <span class="font-semibold text-[11px] mt-0.5">Inventory</span>
+        </button>
+        <button id="nav-organize" onclick="switchView('organize')" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all rounded-xl px-4 py-1.5 active-tap">
+            <span class="material-symbols-outlined">inventory_2</span>
+            <span class="font-semibold text-[11px] mt-0.5">Organize</span>
+        </button>
+        <button id="nav-review" onclick="switchView('review')" class="flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all rounded-xl px-4 py-1.5 active-tap">
+            <span class="material-symbols-outlined">check_circle</span>
+            <span class="font-semibold text-[11px] mt-0.5">Review</span>
+        </button>
+    </nav>
+
+    <!-- FLOATING ACTIONS (ADD ITEM FAB) -->
+    <button onclick="openAddModal()" class="fixed bottom-16 right-4 bg-primary hover:bg-primary/95 text-on-primary w-14 h-14 rounded-full shadow-lg flex items-center justify-center z-35 active:scale-95 transition-all" id="floating-add-fab" title="Quick Add Item">
+        <span class="material-symbols-outlined">add</span>
+    </button>
+
+    <!-- ITEM EDIT/ADD DIALOG MODAL -->
+    <div id="item-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none modal-backdrop transition-opacity">
+        <div class="bg-surface-container-lowest rounded-lg border border-outline-variant w-full max-w-sm p-6 shadow-2xl modal-content translate-y-8 transition-all">
+            <div class="flex justify-between items-center mb-4 border-b border-outline-variant/30 pb-2">
+                <h3 class="font-bold text-headline-md text-primary" id="modal-title">Edit Item</h3>
+                <button onclick="closeItemModal()" class="material-symbols-outlined text-outline hover:text-on-surface transition-colors">close</button>
+            </div>
+            
+            <form id="item-form" onsubmit="saveItem(event)" class="flex flex-col gap-4">
+                <!-- Name -->
+                <div class="flex flex-col gap-1">
+                    <label for="modal-item-name" class="text-xs font-bold text-outline uppercase">Item Name</label>
+                    <input type="text" id="modal-item-name" required class="bg-surface-container-low border border-outline-variant rounded-md px-3 py-2 text-on-surface font-body-md focus:ring-1 focus:ring-primary focus:border-primary w-full" placeholder="e.g. Toothbrush"/>
+                </div>
+                
+                <!-- Qty and Category -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1">
+                        <label for="modal-item-qty" class="text-xs font-bold text-outline uppercase">Quantity</label>
+                        <div class="flex items-center bg-surface-container-low border border-outline-variant rounded-md overflow-hidden h-10">
+                            <button type="button" onclick="adjustModalQty(-1)" class="w-10 h-full flex items-center justify-center font-bold text-lg hover:bg-outline-variant/20 active:bg-outline-variant/45 select-none">-</button>
+                            <input type="number" id="modal-item-qty" min="1" max="99" required class="w-full bg-transparent border-none text-center font-bold text-on-surface focus:ring-0 p-0" value="1"/>
+                            <button type="button" onclick="adjustModalQty(1)" class="w-10 h-full flex items-center justify-center font-bold text-lg hover:bg-outline-variant/20 active:bg-outline-variant/45 select-none">+</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1">
+                        <label for="modal-item-category" class="text-xs font-bold text-outline uppercase">Category</label>
+                        <select id="modal-item-category" class="bg-surface-container-low border border-outline-variant rounded-md px-2 py-2 text-on-surface font-body-md focus:ring-1 focus:ring-primary focus:border-primary w-full h-10">
+                            <option value="Essentials">Essentials</option>
+                            <option value="Clothing">Clothing</option>
+                            <option value="Toiletries">Toiletries</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Documents">Documents</option>
+                            <option value="Footwear">Footwear</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Bag Allocation -->
+                <div class="flex flex-col gap-1">
+                    <label for="modal-item-bag" class="text-xs font-bold text-outline uppercase">Travel Container</label>
+                    <select id="modal-item-bag" class="bg-surface-container-low border border-outline-variant rounded-md px-3 py-2 text-on-surface font-body-md focus:ring-1 focus:ring-primary focus:border-primary w-full">
+                        <option value="none">Unsorted (Desk Stack)</option>
+                        <option value="carry-on">Carry-On Bag</option>
+                        <option value="checked">Checked Bag</option>
+                        <option value="personal">Personal Item</option>
+                    </select>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end gap-3 mt-4 pt-3 border-t border-outline-variant/30">
+                    <button type="button" onclick="closeItemModal()" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-all rounded-full font-label-md text-label-md">Cancel</button>
+                    <button type="submit" class="px-5 py-2 bg-primary text-on-primary hover:bg-primary/95 transition-all rounded-full font-label-md text-label-md shadow-md active-tap">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SHARE/EXPORT DIALOG MODAL -->
+    <div id="share-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none modal-backdrop transition-opacity">
+        <div class="bg-surface-container-lowest rounded-lg border border-outline-variant w-full max-w-sm p-6 shadow-2xl modal-content translate-y-8 scale-95 transition-all">
+            <div class="flex justify-between items-center mb-4 border-b border-outline-variant/30 pb-2">
+                <h3 class="font-bold text-headline-md text-primary">Share & Export</h3>
+                <button onclick="closeShareModal()" class="material-symbols-outlined text-outline hover:text-on-surface transition-colors">close</button>
+            </div>
+            
+            <div class="flex flex-col gap-4">
+                <p class="text-xs text-outline font-semibold uppercase">Export packing list</p>
+                
+                <!-- Share Link -->
+                <button onclick="copyShareLink()" class="w-full bg-surface-container-low border border-outline-variant hover:bg-surface-container-high text-on-surface py-3 px-4 rounded-lg flex items-center gap-3 active-tap transition-all">
+                    <span class="material-symbols-outlined text-primary">link</span>
+                    <div class="text-left flex-1 min-w-0">
+                        <p class="text-sm font-semibold">Copy Shareable Link</p>
+                        <p class="text-[11px] text-outline truncate">Encodes list inside a browser URL</p>
+                    </div>
+                </button>
+                
+                <!-- Copy Text Checklist -->
+                <button onclick="copyTextChecklist()" class="w-full bg-surface-container-low border border-outline-variant hover:bg-surface-container-high text-on-surface py-3 px-4 rounded-lg flex items-center gap-3 active-tap transition-all">
+                    <span class="material-symbols-outlined text-primary">content_copy</span>
+                    <div class="text-left flex-1">
+                        <p class="text-sm font-semibold">Copy Text Checklist</p>
+                        <p class="text-[11px] text-outline">Paste as text into chat apps</p>
+                    </div>
+                </button>
+                
+                <!-- Export JSON File -->
+                <button onclick="downloadJsonExport()" class="w-full bg-surface-container-low border border-outline-variant hover:bg-surface-container-high text-on-surface py-3 px-4 rounded-lg flex items-center gap-3 active-tap transition-all">
+                    <span class="material-symbols-outlined text-primary">download</span>
+                    <div class="text-left flex-1">
+                        <p class="text-sm font-semibold">Download Backup file</p>
+                        <p class="text-[11px] text-outline">Save list as a JSON file</p>
+                    </div>
+                </button>
+                
+                <hr class="border-outline-variant/30 my-1"/>
+                
+                <p class="text-xs text-outline font-semibold uppercase">Import packing list</p>
+                
+                <!-- Import File -->
+                <label class="w-full bg-surface-container-low border border-outline-variant hover:bg-surface-container-high text-on-surface py-3 px-4 rounded-lg flex items-center gap-3 active-tap transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-secondary">upload_file</span>
+                    <div class="text-left flex-1">
+                        <p class="text-sm font-semibold">Upload JSON Backup</p>
+                        <p class="text-[11px] text-outline">Load lists from a saved file</p>
+                    </div>
+                    <input type="file" id="import-json-file" class="hidden" accept=".json" onchange="importJsonFile(event)"/>
+                </label>
+            </div>
+            
+            <div class="flex justify-end mt-6 pt-3 border-t border-outline-variant/30">
+                <button onclick="closeShareModal()" class="px-5 py-2 bg-primary text-on-primary hover:bg-primary/95 transition-all rounded-full font-label-md text-label-md shadow-md active-tap">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMPORT CONFIRMATION MODAL -->
+    <div id="import-confirm-modal" class="fixed inset-0 z-55 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm opacity-0 pointer-events-none modal-backdrop transition-opacity">
+        <div class="bg-surface-container-lowest rounded-lg border border-outline-variant w-full max-w-sm p-6 shadow-2xl modal-content translate-y-8 scale-95 transition-all">
+            <div class="flex justify-between items-center mb-4 border-b border-outline-variant/30 pb-2">
+                <h3 class="font-bold text-headline-md text-primary">Import Shared List</h3>
+            </div>
+            
+            <p class="text-sm text-on-surface leading-snug mb-4" id="import-modal-message">
+                A travel packing list of 0 items has been shared with you. Would you like to import it? This will overwrite your current list.
+            </p>
+            
+            <div class="flex justify-end gap-3 pt-3 border-t border-outline-variant/30">
+                <button onclick="rejectImport()" class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:bg-surface-container-low transition-all rounded-full font-label-md text-label-md">Ignore</button>
+                <button onclick="acceptImport()" class="px-5 py-2 bg-primary text-on-primary hover:bg-primary/95 transition-all rounded-full font-label-md text-label-md shadow-md active-tap">Import List</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="app.js"></script>
+</body>
+</html>

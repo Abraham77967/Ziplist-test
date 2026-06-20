@@ -1,0 +1,270 @@
+/* Custom styles and animations for PackPerfect */
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+.touch-target {
+    min-height: 48px;
+}
+
+/* Circular Progress Rings */
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.strikethrough {
+    text-decoration: line-through;
+    opacity: 0.5;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.custom-shadow {
+    box-shadow: 0 4px 12px rgba(44, 104, 123, 0.06);
+    transition: box-shadow 0.3s ease;
+}
+
+.card-shadow {
+    box-shadow: 0 10px 25px -5px rgba(44, 104, 123, 0.12), 0 8px 10px -6px rgba(44, 104, 123, 0.07);
+}
+
+.liquid-alert-shadow {
+    box-shadow: 0 20px 25px -5px rgba(186, 26, 26, 0.25), 0 8px 10px -6px rgba(186, 26, 26, 0.15);
+}
+
+/* Card Stack styling */
+.card-stack-1 {
+    transform: scale(0.95) translateY(18px);
+    z-index: 10;
+    opacity: 0.65;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+}
+
+.card-stack-2 {
+    transform: scale(0.9) translateY(36px);
+    z-index: 5;
+    opacity: 0.35;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.35s ease;
+}
+
+/* Floating animation */
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
+}
+
+.animate-float {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* View transitions */
+@keyframes viewFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.view-section {
+    opacity: 0;
+}
+
+.view-section:not(.hidden) {
+    animation: viewFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.view-section.hidden {
+    display: none !important;
+}
+
+/* Card Entrance animation */
+@keyframes cardEnter {
+    from {
+        opacity: 0;
+        transform: scale(0.92) translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.swipe-card.entering {
+    animation: cardEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Swiping card transition classes */
+.swipe-card {
+    touch-action: none;
+    will-change: transform, opacity;
+}
+
+/* TSA Alert Entry */
+@keyframes alertSlideIn {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -150%) scale(0.92);
+    }
+    60% {
+        opacity: 1;
+        transform: translate(-50%, -46%) scale(1.02);
+    }
+    85% {
+        transform: translate(-50%, -52%) scale(0.99);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+.tsa-alert-active {
+    animation: alertSlideIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.22) forwards;
+    display: flex !important;
+}
+
+/* Suggestions scrollbar hider */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Active tap scale effect */
+.active-tap {
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.active-tap:active {
+    transform: scale(0.96) !important;
+}
+
+/* Custom modal transitions */
+.modal-backdrop {
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.modal-content {
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Bottom Nav bar active state scaling */
+.nav-item-active {
+    transform: scale(1.03);
+}
+
+/* Runway collapsible transition list */
+#packed-list {
+    transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+/* Checklist packing/unpacking transition animations */
+@keyframes collapseOut {
+    0% {
+        opacity: 1;
+        max-height: 120px;
+        margin-bottom: 8px;
+        padding-top: 16px;
+        padding-bottom: 16px;
+        transform: scale(1);
+        overflow: hidden;
+    }
+    100% {
+        opacity: 0;
+        max-height: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+        transform: scale(0.93) translateY(24px);
+        overflow: hidden;
+    }
+}
+.collapsing-out {
+    animation: collapseOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+@keyframes packedEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(-24px) scale(0.93);
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        max-height: 120px;
+        padding-top: 14px;
+        padding-bottom: 14px;
+        overflow: visible;
+    }
+}
+.packed-entering {
+    animation: packedEnter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes packedCollapseOut {
+    0% {
+        opacity: 1;
+        max-height: 120px;
+        padding-top: 14px;
+        padding-bottom: 14px;
+        transform: scale(1);
+        overflow: hidden;
+    }
+    100% {
+        opacity: 0;
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+        transform: scale(0.93) translateY(-24px);
+        overflow: hidden;
+    }
+}
+.packed-collapsing-out {
+    animation: packedCollapseOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+}
+
+@keyframes unpackEnter {
+    0% {
+        opacity: 0;
+        transform: translateY(24px) scale(0.93);
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        overflow: hidden;
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        max-height: 120px;
+        padding-top: 16px;
+        padding-bottom: 16px;
+        overflow: visible;
+    }
+}
+.unpack-entering {
+    animation: unpackEnter 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes headerGlow {
+    0% { box-shadow: 0 4px 10px rgba(44, 104, 123, 0.08); transform: scale(1); }
+    50% { box-shadow: 0 0 20px rgba(8, 80, 98, 0.35); background-color: rgba(175, 235, 231, 0.25); transform: scale(1.02); }
+    100% { box-shadow: 0 4px 10px rgba(44, 104, 123, 0.08); transform: scale(1); }
+}
+.header-glow-active {
+    animation: headerGlow 0.75s ease-in-out 1;
+}
+
