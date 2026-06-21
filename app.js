@@ -51,6 +51,7 @@ function loadItems() {
 
 function saveItems() {
     localStorage.setItem('ziplist_items', JSON.stringify(items));
+    syncToFirebase();
 }
 
 // Reset app
@@ -118,23 +119,33 @@ function switchView(viewName) {
         const btn = navButtons[key];
         if (!btn) return;
         if (key === viewName) {
-            btn.className = 'flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl px-5 py-1.5 nav-item-active shadow-sm transition-all scale-100';
+            btn.className = 'flex-1 rounded-full text-[11px] font-bold transition-all flex items-center justify-center gap-1 bg-surface-container-lowest text-primary shadow-sm h-full scale-100';
             const icon = btn.querySelector('.material-symbols-outlined');
             if (icon) icon.style.fontVariationSettings = "'FILL' 1";
         } else {
-            btn.className = 'flex flex-col items-center justify-center text-on-surface-variant hover:text-primary transition-all rounded-xl px-4 py-1.5 active-tap';
+            btn.className = 'flex-1 rounded-full text-[11px] font-semibold text-on-surface-variant hover:text-primary transition-all flex items-center justify-center gap-1 active-tap h-full';
             const icon = btn.querySelector('.material-symbols-outlined');
             if (icon) icon.style.fontVariationSettings = "'FILL' 0";
         }
     });
 
-    // Update floating add button visibility
+    // Update floating add button visibility (only show on Review page)
     const addFab = document.getElementById('floating-add-fab');
     if (addFab) {
-        if (viewName === 'organize') {
-            addFab.classList.add('hidden');
-        } else {
+        if (viewName === 'review') {
             addFab.classList.remove('hidden');
+        } else {
+            addFab.classList.add('hidden');
+        }
+    }
+    
+    // Update inventory floating input panel visibility
+    const floatingInput = document.getElementById('inventory-floating-input');
+    if (floatingInput) {
+        if (viewName === 'inventory') {
+            floatingInput.classList.remove('hidden');
+        } else {
+            floatingInput.classList.add('hidden');
         }
     }
     
@@ -150,10 +161,10 @@ function renderInventory() {
     
     if (items.length === 0) {
         list.innerHTML = `
-            <div class="text-center p-8 bg-surface-container-lowest rounded-lg border border-outline-variant/30 card-shadow">
-                <span class="material-symbols-outlined text-outline/40 text-4xl mb-2">inventory</span>
-                <p class="font-semibold text-on-surface-variant">No items in your inventory yet</p>
-                <p class="text-sm text-outline mt-1">Use quick suggestions below or add manually.</p>
+            <div class="text-center p-5 bg-surface-container-lowest rounded-lg border border-outline-variant/30 card-shadow">
+                <span class="material-symbols-outlined text-outline/30 text-3xl mb-1">inventory</span>
+                <p class="font-semibold text-sm text-on-surface-variant">No items in your inventory yet</p>
+                <p class="text-xs text-outline mt-0.5">Use quick suggestions below or add manually.</p>
             </div>
         `;
         return;
@@ -161,10 +172,11 @@ function renderInventory() {
     
     items.forEach(item => {
         const itemEl = document.createElement('div');
-        itemEl.className = 'bg-surface-container-lowest rounded-lg p-4 flex items-center justify-between card-shadow active-tap border border-outline-variant/10';
+        itemEl.className = 'bg-surface-container-lowest rounded-xl p-3 flex items-center justify-between border border-outline-variant/10 shadow-sm active-tap';
         
         // Icon and details
         const icon = getCategoryIcon(item.category, item.name);
+        
         let allocationChip = '';
         if (item.bag && item.bag !== 'none') {
             const bagNames = { 'carry-on': 'Carry-On', 'checked': 'Checked', 'personal': 'Personal' };
@@ -173,28 +185,25 @@ function renderInventory() {
                 'checked': 'bg-surface-container-high text-on-surface-variant border border-outline-variant/20',
                 'personal': 'bg-secondary-container/20 text-secondary border border-secondary-container/30'
             };
-            allocationChip = `<span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${bagColors[item.bag]} ml-2">${bagNames[item.bag]}</span>`;
-        } else {
-            allocationChip = `<span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200/50 ml-2">Unsorted</span>`;
+            allocationChip = `<span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${bagColors[item.bag]}">${bagNames[item.bag]}</span>`;
         }
+
+        const qtySuffix = item.qty > 1 ? `<span class="text-outline font-normal text-xs ml-1.5">×${item.qty}</span>` : '';
 
         itemEl.innerHTML = `
             <div class="flex items-center gap-3 flex-1 min-w-0">
-                <span class="material-symbols-outlined text-primary/70">${icon}</span>
-                <div class="flex flex-col min-w-0">
-                    <span class="font-semibold text-on-surface truncate">${item.name}</span>
-                    <div class="flex items-center mt-0.5 gap-1">
-                        <span class="text-xs text-outline">${item.category}</span>
+                <span class="material-symbols-outlined text-primary/60 text-xl flex-shrink-0">${icon}</span>
+                <div class="flex items-center min-w-0 flex-1 justify-between">
+                    <div class="flex items-center gap-1.5 min-w-0 flex-1 flex-wrap">
+                        <span class="font-semibold text-on-surface text-sm truncate max-w-[140px] xs:max-w-[180px] sm:max-w-none">${item.name}</span>
+                        ${qtySuffix}
                         ${allocationChip}
                     </div>
                 </div>
-                <div class="flex items-center gap-2 ml-auto mr-2">
-                    <button onclick="event.stopPropagation(); openEditModal('${item.id}')" class="material-symbols-outlined text-outline text-[20px] hover:text-primary p-1 rounded-full hover:bg-surface-container/50 transition-colors">edit</button>
-                    <button onclick="event.stopPropagation(); deleteItem('${item.id}')" class="material-symbols-outlined text-outline text-[20px] hover:text-error p-1 rounded-full hover:bg-surface-container/50 transition-colors">delete</button>
-                </div>
             </div>
-            <div class="bg-surface-container-low px-3 py-1 rounded-full flex-shrink-0 border border-outline-variant/30 select-none">
-                <span class="text-xs font-bold text-secondary">Qty: ${item.qty}</span>
+            <div class="flex items-center gap-1.5 ml-2">
+                <button onclick="event.stopPropagation(); openEditModal('${item.id}')" class="material-symbols-outlined text-outline text-[18px] hover:text-primary p-1 rounded-full hover:bg-surface-container/50 transition-colors">edit</button>
+                <button onclick="event.stopPropagation(); deleteItem('${item.id}')" class="material-symbols-outlined text-outline text-[18px] hover:text-error p-1 rounded-full hover:bg-surface-container/50 transition-colors">delete</button>
             </div>
         `;
         
@@ -1056,6 +1065,7 @@ function renderAll() {
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
+    initFirebase();
     loadItems();
     
     // Check if a list was shared via URL query string
@@ -1300,4 +1310,185 @@ function rejectImport() {
         modal.classList.add('pointer-events-none');
         pendingImportItems = null;
     }, 250);
+}
+
+// --- FIREBASE SYNC & AUTHENTICATION ENGINE ---
+
+let db = null;
+let auth = null;
+let currentUser = null;
+let isFirebaseInitialized = false;
+let syncTimeout = null;
+
+function initFirebase() {
+    if (typeof firebaseConfig !== 'undefined' && firebaseConfig.apiKey && firebaseConfig.apiKey !== 'YOUR_API_KEY') {
+        try {
+            firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth();
+            db = firebase.firestore();
+            isFirebaseInitialized = true;
+            console.log("Firebase initialized successfully!");
+            
+            auth.onAuthStateChanged(user => {
+                handleAuthStateChanged(user);
+            });
+        } catch (e) {
+            console.error("Error initializing Firebase: ", e);
+        }
+    } else {
+        console.log("Firebase config not set or placeholder detected. Operating in LocalStorage mode.");
+    }
+}
+
+function handleAuthStateChanged(user) {
+    currentUser = user;
+    
+    const signedOutSection = document.getElementById('profile-signed-out');
+    const signedInSection = document.getElementById('profile-signed-in');
+    const avatarIcon = document.getElementById('profile-avatar-icon');
+    const avatarImg = document.getElementById('profile-avatar-img');
+    const dropdownAvatarImg = document.getElementById('dropdown-avatar-img');
+    const profileName = document.getElementById('profile-name');
+    const profileEmail = document.getElementById('profile-email');
+    
+    if (user) {
+        if (avatarIcon) avatarIcon.classList.add('hidden');
+        if (avatarImg) {
+            avatarImg.src = user.photoURL || '';
+            avatarImg.classList.remove('hidden');
+        }
+        
+        if (signedOutSection) signedOutSection.classList.add('hidden');
+        if (signedInSection) signedInSection.classList.remove('hidden');
+        
+        if (dropdownAvatarImg) dropdownAvatarImg.src = user.photoURL || '';
+        if (profileName) profileName.innerText = user.displayName || 'Traveler';
+        if (profileEmail) profileEmail.innerText = user.email || '';
+        
+        syncFromFirebase();
+    } else {
+        if (avatarIcon) avatarIcon.classList.remove('hidden');
+        if (avatarImg) {
+            avatarImg.src = '';
+            avatarImg.classList.add('hidden');
+        }
+        
+        if (signedInSection) signedInSection.classList.add('hidden');
+        if (signedOutSection) signedOutSection.classList.remove('hidden');
+        
+        loadItems();
+        renderAll();
+    }
+}
+
+function signInWithGoogle() {
+    if (!isFirebaseInitialized) {
+        alert("Firebase is not configured yet. Please configure firebase-config.js with your project credentials.");
+        return;
+    }
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then(result => {
+        closeProfileDropdown();
+        showTsaAlert('SIGNED IN', `Welcome, ${result.user.displayName}! Syncing your list...`, 'cloud_done');
+    }).catch(error => {
+        console.error("Sign-in failed: ", error);
+        alert(`Google Sign-In failed: ${error.message}`);
+    });
+}
+
+function signOut() {
+    if (!isFirebaseInitialized) return;
+    if (confirm("Are you sure you want to sign out? Your items will be saved locally on this browser.")) {
+        auth.signOut().then(() => {
+            closeProfileDropdown();
+            showTsaAlert('SIGNED OUT', 'You have signed out. List edits will save to local storage.', 'cloud_off');
+        }).catch(error => {
+            console.error("Sign-out failed: ", error);
+        });
+    }
+}
+
+function toggleProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (!dropdown) return;
+    
+    const isHidden = dropdown.classList.contains('hidden');
+    if (isHidden) {
+        dropdown.classList.remove('hidden');
+        dropdown.offsetHeight; // trigger reflow
+        dropdown.classList.remove('opacity-0', 'translate-y-2');
+        dropdown.classList.add('opacity-100', 'translate-y-0');
+        
+        setTimeout(() => {
+            window.addEventListener('click', closeDropdownOnOutsideClick);
+        }, 50);
+    } else {
+        closeProfileDropdown();
+    }
+}
+
+function closeProfileDropdown() {
+    const dropdown = document.getElementById('profile-dropdown');
+    if (!dropdown) return;
+    
+    dropdown.classList.remove('opacity-100', 'translate-y-0');
+    dropdown.classList.add('opacity-0', 'translate-y-2');
+    setTimeout(() => {
+        dropdown.classList.add('hidden');
+    }, 200);
+    
+    window.removeEventListener('click', closeDropdownOnOutsideClick);
+}
+
+function closeDropdownOnOutsideClick(e) {
+    const btn = document.getElementById('profile-btn');
+    const dropdown = document.getElementById('profile-dropdown');
+    if (btn && dropdown && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+        closeProfileDropdown();
+    }
+}
+
+function syncFromFirebase() {
+    if (!isFirebaseInitialized || !currentUser) return;
+    
+    const docRef = db.collection('users').doc(currentUser.uid);
+    docRef.get().then(doc => {
+        if (doc.exists) {
+            const data = doc.data();
+            if (data && Array.isArray(data.items)) {
+                items = data.items;
+                localStorage.setItem('ziplist_items', JSON.stringify(items));
+                renderAll();
+                console.log("Checklist loaded and synced from Firestore.");
+            }
+        } else {
+            docRef.set({
+                items: items,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                console.log("Initial local checklist uploaded to Firestore.");
+            }).catch(err => {
+                console.error("Error setting initial document: ", err);
+            });
+        }
+    }).catch(err => {
+        console.error("Error loading checklist from Firestore: ", err);
+    });
+}
+
+function syncToFirebase() {
+    if (!isFirebaseInitialized || !currentUser) return;
+    
+    if (syncTimeout) clearTimeout(syncTimeout);
+    
+    syncTimeout = setTimeout(() => {
+        db.collection('users').doc(currentUser.uid).set({
+            items: items,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+            console.log("Checklist synced to Firestore successfully.");
+        }).catch(err => {
+            console.error("Error syncing checklist to Firestore: ", err);
+        });
+    }, 500);
 }
